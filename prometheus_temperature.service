@@ -1,0 +1,14 @@
+[Unit]
+Description=prometheus temperature server
+After=network.target
+
+
+[Service]
+Environment="PYTHONUNBUFFERED=1"
+Restart=always
+ExecStart=/usr/local/bin/prometheus_temperatured
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+Alias=prometheus_temperature.service
