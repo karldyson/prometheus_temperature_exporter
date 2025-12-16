@@ -1,0 +1,13 @@
+# Options you want to pass to prometheus_temperatured
+
+TEMPERATURED_OPTIONS=""
+
+# You may want some or all of the following:
+#
+# -s <integer> - this is the port that the HTTP server will listen on for connections from prometheus to scrape the temperature data values.
+#
+# -i <string> - this is the IP address that the multicast listener should bind to.
+#
+# -g <string> - this is the multicast group to subscribe to.
+#
+# -p <integer> - this is the udp port that multicast packets are expected on.

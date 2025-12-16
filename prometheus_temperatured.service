@@ -5,8 +5,9 @@ After=network.target
 
 [Service]
 Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/etc/default/prometheus_temperatured
 Restart=always
-ExecStart=/usr/local/bin/prometheus_temperatured
+ExecStart=/usr/local/bin/prometheus_temperatured $TEMPERATURED_OPTIONS
 Type=simple
 
 [Install]

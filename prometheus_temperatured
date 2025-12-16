@@ -1,46 +1,124 @@
 #!/usr/bin/env python
 
-# Author: Karl Dyson https://karld.blog
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# See the LICENSE file for the full text of the license.
-#
-# Last Updated: December 2025
-#
+"""
+ Author: Karl Dyson https://karld.blog
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ See the LICENSE file for the full text of the license.
+
+ Last Updated: December 2025
+"""
 
 import socket
 import time
 import sys
+import os
 import json
 import re
+import getopt
 from prometheus_client import start_http_server, Gauge
 
-listen_port = 8000
-mgroup = "239.0.0.1"
-mport = 11235
-mbin = bytes(map(int, mgroup.split("."))) + bytes(4)
+"""
+define our config class with our default values
+"""
+class config:
+	server_port = 8000
+	bind_to_ip = "0.0.0.0"
+	multicast_group = "239.0.0.1"
+	multicast_port = 11235
 
+"""
+our version number
+"""
+version = '1.0'
+
+"""
+define our usage
+"""
+def usage():
+	print("""
+ {0} version {1}
+ Usage: {0} [options]
+
+  Options:
+   -s N		The port for the server to listen on (default: tcp/{2})
+   -i N		The IP to bind to (default: {3})
+   -g N		The multicast group to join (default: {4})
+   -p N		The multicast port to listen for (default: {5})
+   -h		This help
+	""".format(os.path.basename(sys.argv[0]), version, config.server_port, config.bind_to_ip, config.multicast_group, config.multicast_port))
+	sys.exit(4)
+
+"""
+parse our command line options and show usage if there's an exception
+"""
+try:
+	(options, args) = getopt.getopt(sys.argv[1:], 's:i:g:p:h')
+except getopt.GetoptError as e:
+	print(f"Error: {e}")
+	usage()
+
+"""
+update the config depending on the command line options
+"""
+for (opt, optval) in options:
+	match opt:
+		case '-s': config.server_port = int(optval)
+		case '-i': config.bind_to_ip = optval
+		case '-g': config.multicast_group = optval
+		case "-p": config.multicast_port = int(optval)
+		case "-h": usage()
+
+"""
+create the udp socket, bind to the multicast group and port, and subscribe to the multicast group
+"""
+mbin = bytes(map(int, config.multicast_group.split("."))) + bytes(4)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-sock.bind(("0.0.0.0", mport))
+sock.bind((config.bind_to_ip, config.multicast_port))
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mbin)
 
-start_http_server(listen_port)
-print(f"HTTP Server Started on tcp/{listen_port} for multicast {mgroup}:{mport}")
+"""
+start the prometheus server and output a confirmation
+"""
+start_http_server(config.server_port)
+print(f"HTTP Server Started on tcp/{config.server_port}, listening for multicast on {config.multicast_group}:{config.multicast_port}")
 
+"""
+initialise the metrics
+the first is for the actual temperature values
+the second is for a timestamp for each update so we can alert if a sensor disappears
+"""
 temp_gauge = Gauge('temperature', "Temperatures", ['friendly_name', 'sensor_name'])
+temp_gauge_timestamp = Gauge('temperature_last_seen_timestamp', "Temperatures Last Seen Timestamp", ['friendly_name', 'sensor_name'])
+
+"""
+now we loop around grabbing packets from the network
+"""
 while True:
+	"""grab the packet from the network"""
 	data, address = sock.recvfrom(1024)
+
+	"""get the current time and output the received packet for the log/console"""
 	current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 	print(f"{current_time} {address}: {data.decode()}")
+
+	"""decode the packet and grab the sensor data from the json"""
 	sensor = json.loads(data.decode())
+
+	"""we are only interested if the packet type is temperature data"""
 	if sensor['type'] != 'temperature': continue
+
+	"""work out some details, the sensor name, make it a friendly name, grab the temperature"""
 	sensor_name = sensor["name"]
 	stripped_name = "".join(sensor_name.split())
 	friendly_name = " ".join(re.sub(r"([A-Z])", r" \1", stripped_name).split())
 	sensor_temperature = sensor["temperature"]
+
+	"""...and finally update the metrics"""
 	temp_gauge.labels(friendly_name=friendly_name, sensor_name=stripped_name).set(sensor_temperature)
+	temp_gauge_timestamp.labels(friendly_name=friendly_name, sensor_name=stripped_name).set(time.time())
