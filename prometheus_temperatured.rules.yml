@@ -1,0 +1,39 @@
+# Prometheus recording rules for prometheus_temperatured
+#
+# Derives dew point and absolute humidity for every probe that reports both
+# temperature and humidity (e.g. SHT30 probes). Probes without humidity are skipped.
+#
+# Install: copy to e.g. /etc/prometheus/rules/prometheus_temperatured.rules.yml, make sure
+# prometheus.yml loads it:
+#
+#   rule_files:
+#     - /etc/prometheus/rules/*.yml
+#
+# then check and reload:
+#
+#   promtool check rules /etc/prometheus/rules/prometheus_temperatured.rules.yml
+#   promtool check config /etc/prometheus/prometheus.yml
+#   killall -HUP prometheus
+#
+# Recording rules only produce values from the time they're loaded; there's no backfill.
+
+groups:
+  - name: prometheus_temperatured
+    rules:
+      # Dew point in Celsius, Magnus formula (Sonntag constants a = 17.62, b = 243.12):
+      #   g  = ln(RH/100) + a*T/(b+T)
+      #   Td = b*g / (a-g)
+      # e.g. 20 C at 50 % RH gives 9.26 C
+      - record: sensor:dewpoint
+        expr: |
+          243.12 * (ln(humidity / 100) + 17.62 * temperature / (243.12 + temperature))
+          /
+          (17.62 - (ln(humidity / 100) + 17.62 * temperature / (243.12 + temperature)))
+
+      # Absolute humidity in g/m3:
+      #   AH = 6.112 * e^(17.67*T/(T+243.5)) * RH * 2.1674 / (273.15+T)
+      # e.g. 20 C at 50 % RH gives 8.64 g/m3
+      - record: sensor:absolute_humidity
+        expr: |
+          6.112 * exp(17.67 * temperature / (temperature + 243.5)) * humidity * 2.1674
+          / (273.15 + temperature)
