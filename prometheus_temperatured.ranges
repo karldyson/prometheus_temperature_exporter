@@ -1,0 +1,31 @@
+# Per-sensor measurement ranges for prometheus_temperatured
+#
+# Pass this file with -r, e.g. -r /etc/prometheus_temperatured.ranges
+#
+# Values outside a range are discarded and counted in
+# sensor_measurement_rejected_total{reason="out_of_range"}.
+#
+# Format is "measurement = min:max" (inclusive). The [DEFAULT] section applies to
+# every sensor. A section named after a sensor (the name with spaces removed, as in
+# the sensor_name label, e.g. ColdWaterTank) overrides only the measurements it lists.
+# Anything not set here uses the built-in range:
+#   temperature = -55:125
+#   humidity = 0:100
+#
+# A sane room range also catches the DS18B20's error values (85.0 at power-on,
+# -127 when disconnected).
+
+[DEFAULT]
+temperature = -10:45
+humidity = 0:100
+
+# Examples - adjust to your sensor names:
+#
+# [BoilerFlow]
+# temperature = -10:110
+#
+# [Outside]
+# temperature = -30:50
+#
+# [Loft]
+# temperature = -20:60

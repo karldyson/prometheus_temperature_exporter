@@ -11,3 +11,6 @@ TEMPERATURED_OPTIONS=""
 # -g <string> - this is the multicast group to subscribe to.
 #
 # -p <integer> - this is the udp port that multicast packets are expected on.
+#
+# -r <file> - a per-sensor measurement ranges file, e.g. /etc/prometheus_temperatured.ranges
+#             (see the template prometheus_temperatured.ranges for the format).
