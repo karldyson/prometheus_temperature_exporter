@@ -166,6 +166,16 @@ avg_over_time(max by (friendly_name, sensor_name) (temperature{friendly_name=~"$
 
 The same works for `humidity`.
 
+### Dew Point and Absolute Humidity
+
+The daemon only exports the raw `temperature` and `humidity`. `prometheus_temperatured.rules.yml`
+contains Prometheus recording rules that derive, for every probe reporting both:
+
+- `sensor:dewpoint`: dew point in Celsius (Magnus formula)
+- `sensor:absolute_humidity`: grams of water per cubic metre
+
+Installation instructions are at the top of the file. They only produce values from when they're loaded.
+
 ### Dashboard
 
 I've included an example dashboard but you will likely want to change it.
