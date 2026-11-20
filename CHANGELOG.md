@@ -68,6 +68,6 @@ Initial release.
   `-p` multicast port, `-h` help.
 - systemd service file, plus a defaults file for passing options to the service.
 
-[2.0]: https://github.com/karldyson/prometheus_temperature_exporter/pull/1
-[1.1]: https://github.com/karldyson/prometheus_temperature_exporter/compare/9d86a46...69067ef
+[2.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v1.1...v2.0
+[1.1]: https://github.com/karldyson/prometheus_temperature_exporter/compare/9d86a46...v1.1
 [1.0]: https://github.com/karldyson/prometheus_temperature_exporter/commit/9d86a46
