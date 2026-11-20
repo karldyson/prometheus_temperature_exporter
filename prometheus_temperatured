@@ -35,7 +35,7 @@ class config:
 """
 our version number
 """
-version = '1.0'
+version = '1.1'
 
 """
 define our usage
@@ -93,8 +93,8 @@ initialise the metrics
 the first is for the actual temperature values
 the second is for a timestamp for each update so we can alert if a sensor disappears
 """
-temp_gauge = Gauge('temperature', "Temperatures", ['friendly_name', 'sensor_name'])
-temp_gauge_timestamp = Gauge('temperature_last_seen_timestamp', "Temperatures Last Seen Timestamp", ['friendly_name', 'sensor_name'])
+temp_gauge = Gauge('temperature', "Temperatures", ['friendly_name', 'sensor_name', 'sensor_version'])
+temp_gauge_timestamp = Gauge('temperature_last_seen_timestamp', "Temperatures Last Seen Timestamp", ['friendly_name', 'sensor_name', 'sensor_version'])
 
 """
 now we loop around grabbing packets from the network
@@ -118,7 +118,8 @@ while True:
 	stripped_name = "".join(sensor_name.split())
 	friendly_name = " ".join(re.sub(r"([A-Z])", r" \1", stripped_name).split())
 	sensor_temperature = sensor["temperature"]
+	sensor_version = sensor["version"]
 
 	"""...and finally update the metrics"""
-	temp_gauge.labels(friendly_name=friendly_name, sensor_name=stripped_name).set(sensor_temperature)
-	temp_gauge_timestamp.labels(friendly_name=friendly_name, sensor_name=stripped_name).set(time.time())
+	temp_gauge.labels(friendly_name=friendly_name, sensor_name=stripped_name, sensor_version=sensor_version).set(sensor_temperature)
+	temp_gauge_timestamp.labels(friendly_name=friendly_name, sensor_name=stripped_name, sensor_version=sensor_version).set(time.time())
