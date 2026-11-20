@@ -204,7 +204,7 @@ already broken (the daemon won't recreate a series it hasn't heard from since it
 
 ## TODO
 
-- Include the example dashboard in the repo
+See [TODO.md](TODO.md).
 
 ## Copyright
 
