@@ -19,6 +19,7 @@ basket is too cold, etc.
 - **Health metrics**: spot a location that stops sending, and a sensor that stops giving good values
 - **Per-location ranges**: discard implausible values (e.g. a DS18B20's 85.0 power-on value) with a range per sensor
 - **Robust**: a malformed packet is logged and skipped rather than stopping the daemon
+- **Grafana dashboards**: an environment overview of all locations, with linked detail dashboards for temperature, humidity and CO2 in [`grafana/`](grafana/) (see [Dashboards](#dashboards))
 
 ## Installation
 
@@ -110,7 +111,7 @@ joins on `sensor_info` by `sensor_name` alone may now match several series for o
 `sensor_id` to the join, or aggregate first. The new `co2` metric needs no changes elsewhere.
 
 **Upgrading from 1.x:** `temperature_last_seen_timestamp` is replaced by `sensor_last_seen_timestamp`
-and `sensor_measurement_last_seen_timestamp`, and 1.1's `sensor_version` label is gone. Update queries
+and `sensor_measurement_last_seen_timestamp`, and 1.1.0's `sensor_version` label is gone. Update queries
 before upgrading; see [Queries](#queries).
 
 ## Packets
@@ -150,7 +151,7 @@ No measurement is present in every packet: from firmware 3.0.0, `temperature` is
 out or send `null`, never a made-up value. Either way, that measurement's
 `sensor_measurement_last_seen_timestamp` stops advancing, which is what the alerts below look for.
 
-**Deploy the daemon (2.0 or later) before any probe that sends `"type": "reading"`**: 1.x ignores those packets.
+**Deploy the daemon (2.0.0 or later) before any probe that sends `"type": "reading"`**: 1.x ignores those packets.
 
 ### Glossary
 
@@ -177,7 +178,7 @@ To make these names more friendly for Grafana output, I split them on each capit
 
 ### Queries
 
-Aggregate by `friendly_name, sensor_name` so that series from older versions (1.1 had a
+Aggregate by `friendly_name, sensor_name` so that series from older versions (1.1.0 had a
 `sensor_version` label) join up into one line per sensor:
 
 ```
@@ -196,15 +197,33 @@ contains Prometheus recording rules that derive, for every probe reporting both:
 
 Installation instructions are at the top of the file. They only produce values from when they're loaded.
 
-### Dashboard
+### Dashboards
 
-I've included an example dashboard but you will likely want to change it.
+[`grafana/`](grafana/) has dashboards that you can import as they are, and change to suit:
 
-I have a main graph that dynamically picks up all sensors. There's a picker variable
-at the top of the dashboard so you can look at subsets.
+| File | Title (uid) | Shows | Needs |
+|------|-------------|-------|-------|
+| [`grafana/environment.json`](grafana/environment.json) | Environment (`temperatured-environment`) | The overview, for every location:<br>• Counts of what needs attention: silent locations, stale measurements, rejected readings in the last hour, locations below 3 °C, locations within 3 °C of their dew point, and CO2 above 1000 ppm.<br>• A table with each location's latest temperature, humidity, margin above dew point, CO2 and last-seen time.<br>• Small temperature, humidity and CO2 trend graphs. | Exporter 2.0.0+. The dew point columns need the [recording rules](#dew-point-and-absolute-humidity); CO2 needs exporter 3.0.0+ |
+| [`grafana/temperature.json`](grafana/temperature.json) | Temperature (`temperatured-temperature`) | Temperature now (blue below 3 °C, frost risk), a graph with min/mean/max/last in the legend, rate of change in °C per hour, seconds since the last temperature reading, and rejected readings | Exporter 2.0.0+ |
+| [`grafana/humidity.json`](grafana/humidity.json) | Humidity (`temperatured-humidity`) | Relative humidity, absolute humidity, dew point, and margin above dew point (condensation risk) | Exporter 2.0.0+. Everything except relative humidity also needs the [recording rules](#dew-point-and-absolute-humidity) |
+| [`grafana/co2.json`](grafana/co2.json) | CO2 (`temperatured-co2`) | CO2 now, peak and time above 1000 ppm over the time range, a graph with 800/1000/1400 ppm bands, and seconds since the last CO2 reading | Exporter 3.0.0+, and pico-temperature 3.0.0+ with an SCD4x |
 
-I then have some hard coded grouped graphs, for example, one shows the sensors
-related to my heating system.
+To import one:
+1. In Grafana, go to **Dashboards → New → Import**.
+1. Upload the JSON file.
+1. When asked, pick the Prometheus data source that scrapes this exporter.
+
+Each dashboard has a **Location** picker at the top, which allows several choices and has an "All" option, so you can look at a subset. The fixed uid means importing it again updates the dashboard rather than duplicating it.
+
+Start with **Environment**. Picking a location there narrows everything on it to that location. Import all four dashboards, because the links between them find each other by uid and tag. They carry the location and time range with them:
+
+- In the Locations table:
+  - Click a location to narrow the overview to it.
+  - Click a temperature, humidity, dew point or CO2 value to open that measurement's dashboard for that location.
+- The attention tiles and trend graphs link to the matching detail dashboard, from the link icon in the panel header.
+- The **Detail** links at the top go to the detail dashboards, which are tagged `temperature`. Each detail dashboard has an **Overview** link back to the dashboard tagged `environment`.
+
+The temperature dashboard is deliberately generic. On my own dashboards I also have graphs of fixed groups of locations, for example the sensors on my heating system. To make one, copy the Temperature panel and replace `$friendly_name` in its query with a fixed regex such as `Flow|Return|Hot Water Tank`.
 
 ### Alerts
 
