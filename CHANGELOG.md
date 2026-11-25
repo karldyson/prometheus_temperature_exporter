@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 uses version numbers in the style of [Semantic Versioning](https://semver.org/): a major version
 bump means a breaking change to the exported metrics, the CLI or the packets accepted.
 
+## [3.0] - 2026-11-25
+
+Breaking change to `sensor_info`. Packets from every existing probe are still accepted unchanged.
+See "Upgrading from 2.x" in the README.
+
+### ⚠️ Breaking
+- `sensor_info` has a new `sensor_id` label, from the packet's `sensor` field. There is now one series
+  per sensor at each location instead of one per location.
+
+### Added
+- A `co2` gauge (ppm) for sensors that send it (e.g. SCD41, from pico-temperature 3.0.0), with a
+  built-in range of `0:40000`. It can be set in the ranges file like the other measurements.
+- README glossary of unit, sensor, location, measurement and reading, shared with pico-temperature.
+  A `name` is a location, and several sensors can report for one location.
+
+### Changed
+- Docs: `sensor_last_seen_timestamp` is per location, so in a shared location only
+  `sensor_measurement_last_seen_timestamp` catches a single dead sensor. Ranges apply per location.
+
+### Fixed
+- `sensor_info` no longer flaps (removing and re-adding its label set with every packet) when
+  several sensors with different models share a location.
+
 ## [2.0] - 2026-11-20
 
 Breaking changes to the exported metrics. Packets from existing probes are still accepted unchanged.
@@ -68,6 +91,7 @@ Initial release.
   `-p` multicast port, `-h` help.
 - systemd service file, plus a defaults file for passing options to the service.
 
+[3.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v2.0...v3.0
 [2.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v1.1...v2.0
 [1.1]: https://github.com/karldyson/prometheus_temperature_exporter/compare/9d86a46...v1.1
 [1.0]: https://github.com/karldyson/prometheus_temperature_exporter/commit/9d86a46

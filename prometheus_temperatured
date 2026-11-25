@@ -38,7 +38,7 @@ class config:
 """
 our version number
 """
-version = '2.0'
+version = '3.0'
 
 """
 the packet types we accept
@@ -95,19 +95,24 @@ for (opt, optval) in options:
 
 """
 initialise the metrics
+a packet's name is a location (e.g. Kitchen), not a probe: several sensors may report for one
+location, each sending different measurements, so everything except sensor_info is per location
 the measurement gauges hold the actual values, one gauge per measurement type
-sensor_last_seen_timestamp is updated for every valid packet, so we can alert if a probe disappears
+sensor_last_seen_timestamp is updated for every valid packet, so we can alert if a location goes
+quiet; with several sensors at one location it only shows that one of them is still sending
 sensor_measurement_last_seen_timestamp is updated per accepted measurement, so we can alert if a
-sensor on a probe stops giving us good values while the probe itself is still sending
+single sensor stops giving us good values while others at the same location are still sending
 sensor_measurement_rejected counts measurements we discarded, and why
-sensor_info carries the probe's model, firmware and version as labels with a constant value of 1
+sensor_info carries each sensor's model, firmware and version as labels with a constant value of 1,
+keyed by location and the packet's sensor field (sensor_id)
 """
 temp_gauge = Gauge('temperature', "Temperature (Celsius)", ['friendly_name', 'sensor_name'])
 humidity_gauge = Gauge('humidity', "Relative Humidity (%)", ['friendly_name', 'sensor_name'])
+co2_gauge = Gauge('co2', "CO2 Concentration (ppm)", ['friendly_name', 'sensor_name'])
 last_seen_gauge = Gauge('sensor_last_seen_timestamp', "Probe Last Seen Timestamp", ['friendly_name', 'sensor_name'])
 measurement_last_seen_gauge = Gauge('sensor_measurement_last_seen_timestamp', "Measurement Last Accepted Timestamp", ['friendly_name', 'sensor_name', 'measurement'])
 rejected_counter = Counter('sensor_measurement_rejected', "Measurements Rejected", ['sensor_name', 'measurement', 'reason'])
-info_gauge = Gauge('sensor_info', "Probe Information", ['sensor_name', 'model', 'fw', 'version'])
+info_gauge = Gauge('sensor_info', "Sensor Information", ['sensor_name', 'sensor_id', 'model', 'fw', 'version'])
 
 """
 the measurements we know about: the packet field, the gauge it updates, and the built-in
@@ -117,6 +122,7 @@ to add a new measurement, add a gauge above and a line here
 MEASUREMENTS = (
 	("temperature", temp_gauge, (-55.0, 125.0)),
 	("humidity", humidity_gauge, (0.0, 100.0)),
+	("co2", co2_gauge, (0.0, 40000.0)),
 )
 
 """
@@ -181,8 +187,9 @@ if config.ranges_file:
 	print(f"Measurement ranges loaded from {config.ranges_file} ({len(sensor_ranges)} sensor override(s))")
 
 """
-remember each sensor's current info labels, so we can remove the old set when they change
-otherwise the old label set would continue to be exported
+remember each sensor's current info labels, keyed by (location, sensor id), so we can remove the
+old set when they change; otherwise the old label set would continue to be exported
+keying by location alone would make sensor_info flap between sensors sharing a location
 """
 info_labels = {}
 
@@ -223,6 +230,7 @@ while True:
 		friendly_name = " ".join(re.sub(r"([A-Z])", r" \1", stripped_name).split())
 
 		"""optional details, older probes may not send some or all of these"""
+		sensor_id = str(sensor.get("sensor", ""))
 		info = tuple(str(sensor.get(field, "")) for field in ("model", "fw", "version"))
 	except (UnicodeDecodeError, ValueError, KeyError, TypeError, AttributeError) as e:
 		log(f"{address}: ignoring packet: {type(e).__name__}: {e}")
@@ -233,12 +241,13 @@ while True:
 	last_seen_gauge.labels(friendly_name=friendly_name, sensor_name=stripped_name).set(now)
 
 	"""update the info metric, removing the previous label set if it has changed"""
-	previous_info = info_labels.get(stripped_name)
+	info_key = (stripped_name, sensor_id)
+	previous_info = info_labels.get(info_key)
 	if previous_info != info:
 		if previous_info is not None:
-			info_gauge.remove(stripped_name, *previous_info)
-		info_gauge.labels(stripped_name, *info).set(1)
-		info_labels[stripped_name] = info
+			info_gauge.remove(stripped_name, sensor_id, *previous_info)
+		info_gauge.labels(stripped_name, sensor_id, *info).set(1)
+		info_labels[info_key] = info
 
 	"""
 	check and record each measurement independently, so one bad value never discards the others
