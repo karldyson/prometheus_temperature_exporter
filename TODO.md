@@ -23,7 +23,6 @@ Optional; the Prometheus path must never depend on it.
 
 ## Repo
 
-- Include the example dashboard in the repo. The README mentions one, but it isn't here. Also consider adding the Humidity dashboard.
 - Check that the sensor repo's template `config.py` now defaults `UDP_PORT` to `11235`, so the README's "the defaults match" is true.
 
 ## Ideas

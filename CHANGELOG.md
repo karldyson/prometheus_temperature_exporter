@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 uses version numbers in the style of [Semantic Versioning](https://semver.org/): a major version
 bump means a breaking change to the exported metrics, the CLI or the packets accepted.
 
+## [Unreleased]
+
+### Added
+- Grafana dashboards in `grafana/`:
+  - `environment.json`: an overview of every location, with a location picker. It has:
+    - tiles counting what needs attention (silent locations, stale measurements, rejected
+      readings, frost, condensation risk and high CO2);
+    - a table of each location's latest values;
+    - trend graphs.
+    Its tables, tiles and graphs link to the detail dashboards below, and each of those links back.
+  - `temperature.json`: current temperature with a frost warning, a graph with min/mean/max/last,
+    rate of change, seconds since the last reading, and rejected readings.
+  - `humidity.json`: relative and absolute humidity, dew point, and margin above dew point.
+  - `co2.json`: current and peak CO2, time above 1000 ppm, and seconds since the last reading.
+  The README's Dashboards section covers importing them. The daemon itself is unchanged.
+  The humidity dashboard's picker is labelled "Location" (it was "Sensor"), to match the others.
+
+### Fixed
+- The README said an example dashboard was included when it wasn't.
+
 ## [3.0] - 2026-11-25
 
 Breaking change to `sensor_info`. Packets from every existing probe are still accepted unchanged.
@@ -91,6 +111,7 @@ Initial release.
   `-p` multicast port, `-h` help.
 - systemd service file, plus a defaults file for passing options to the service.
 
+[Unreleased]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v3.0...HEAD
 [3.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v2.0...v3.0
 [2.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v1.1...v2.0
 [1.1]: https://github.com/karldyson/prometheus_temperature_exporter/compare/9d86a46...v1.1
