@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 uses version numbers in the style of [Semantic Versioning](https://semver.org/): a major version
 bump means a breaking change to the exported metrics, the CLI or the packets accepted.
 
-## [Unreleased]
+## [3.1.0] - 2026-11-25
 
 ### Added
 - Grafana dashboards in `grafana/`:
@@ -23,10 +23,15 @@ bump means a breaking change to the exported metrics, the CLI or the packets acc
   The README's Dashboards section covers importing them. The daemon itself is unchanged.
   The humidity dashboard's picker is labelled "Location" (it was "Sensor"), to match the others.
 
+### Changed
+- Versions now have three parts (`3.1.0`, tag `v3.1.0`), as in pico-temperature. Earlier releases are
+  renamed to match: their tags are now `v1.0.0`, `v1.1.0`, `v2.0.0` and `v3.0.0`, replacing `v1.1`
+  and `v2.0`. `v1.0.0` and `v3.0.0` weren't tagged before.
+
 ### Fixed
 - The README said an example dashboard was included when it wasn't.
 
-## [3.0] - 2026-11-25
+## [3.0.0] - 2026-11-25
 
 Breaking change to `sensor_info`. Packets from every existing probe are still accepted unchanged.
 See "Upgrading from 2.x" in the README.
@@ -49,7 +54,7 @@ See "Upgrading from 2.x" in the README.
 - `sensor_info` no longer flaps (removing and re-adding its label set with every packet) when
   several sensors with different models share a location.
 
-## [2.0] - 2026-11-20
+## [2.0.0] - 2026-11-20
 
 Breaking changes to the exported metrics. Packets from existing probes are still accepted unchanged.
 See "Upgrading from 1.x" in the README.
@@ -84,7 +89,7 @@ See "Upgrading from 1.x" in the README.
 - Malformed packets, and packets without a `version`, are logged and skipped instead of stopping the daemon.
 - The previous label set is no longer exported, frozen at its last value, after a probe's version changes.
 
-## [1.1] - 2026-11-20
+## [1.1.0] - 2026-11-20
 
 ### Added
 - `sensor_version` label on `temperature` and `temperature_last_seen_timestamp`, taken from the
@@ -96,7 +101,7 @@ See "Upgrading from 1.x" in the README.
 - Packets without a `version` field (older probes) raise an error and stop the daemon.
 - A malformed packet (bad JSON, missing field) stops the daemon. This also affects 1.0.
 
-## [1.0] - 2025-12-16
+## [1.0.0] - 2025-12-16
 
 Initial release.
 
@@ -111,8 +116,8 @@ Initial release.
   `-p` multicast port, `-h` help.
 - systemd service file, plus a defaults file for passing options to the service.
 
-[Unreleased]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v3.0...HEAD
-[3.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v2.0...v3.0
-[2.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v1.1...v2.0
-[1.1]: https://github.com/karldyson/prometheus_temperature_exporter/compare/9d86a46...v1.1
-[1.0]: https://github.com/karldyson/prometheus_temperature_exporter/commit/9d86a46
+[3.1.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v2.0.0...v3.0.0
+[2.0.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v1.1.0...v2.0.0
+[1.1.0]: https://github.com/karldyson/prometheus_temperature_exporter/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/karldyson/prometheus_temperature_exporter/releases/tag/v1.0.0

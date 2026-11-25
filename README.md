@@ -111,7 +111,7 @@ joins on `sensor_info` by `sensor_name` alone may now match several series for o
 `sensor_id` to the join, or aggregate first. The new `co2` metric needs no changes elsewhere.
 
 **Upgrading from 1.x:** `temperature_last_seen_timestamp` is replaced by `sensor_last_seen_timestamp`
-and `sensor_measurement_last_seen_timestamp`, and 1.1's `sensor_version` label is gone. Update queries
+and `sensor_measurement_last_seen_timestamp`, and 1.1.0's `sensor_version` label is gone. Update queries
 before upgrading; see [Queries](#queries).
 
 ## Packets
@@ -151,7 +151,7 @@ No measurement is present in every packet: from firmware 3.0.0, `temperature` is
 out or send `null`, never a made-up value. Either way, that measurement's
 `sensor_measurement_last_seen_timestamp` stops advancing, which is what the alerts below look for.
 
-**Deploy the daemon (2.0 or later) before any probe that sends `"type": "reading"`**: 1.x ignores those packets.
+**Deploy the daemon (2.0.0 or later) before any probe that sends `"type": "reading"`**: 1.x ignores those packets.
 
 ### Glossary
 
@@ -178,7 +178,7 @@ To make these names more friendly for Grafana output, I split them on each capit
 
 ### Queries
 
-Aggregate by `friendly_name, sensor_name` so that series from older versions (1.1 had a
+Aggregate by `friendly_name, sensor_name` so that series from older versions (1.1.0 had a
 `sensor_version` label) join up into one line per sensor:
 
 ```
@@ -203,10 +203,10 @@ Installation instructions are at the top of the file. They only produce values f
 
 | File | Title (uid) | Shows | Needs |
 |------|-------------|-------|-------|
-| [`grafana/environment.json`](grafana/environment.json) | Environment (`temperatured-environment`) | The overview, for every location:<br>• Counts of what needs attention: silent locations, stale measurements, rejected readings in the last hour, locations below 3 °C, locations within 3 °C of their dew point, and CO2 above 1000 ppm.<br>• A table with each location's latest temperature, humidity, margin above dew point, CO2 and last-seen time.<br>• Small temperature, humidity and CO2 trend graphs. | Exporter 2.0+. The dew point columns need the [recording rules](#dew-point-and-absolute-humidity); CO2 needs exporter 3.0+ |
-| [`grafana/temperature.json`](grafana/temperature.json) | Temperature (`temperatured-temperature`) | Temperature now (blue below 3 °C, frost risk), a graph with min/mean/max/last in the legend, rate of change in °C per hour, seconds since the last temperature reading, and rejected readings | Exporter 2.0+ |
-| [`grafana/humidity.json`](grafana/humidity.json) | Humidity (`temperatured-humidity`) | Relative humidity, absolute humidity, dew point, and margin above dew point (condensation risk) | Exporter 2.0+. Everything except relative humidity also needs the [recording rules](#dew-point-and-absolute-humidity) |
-| [`grafana/co2.json`](grafana/co2.json) | CO2 (`temperatured-co2`) | CO2 now, peak and time above 1000 ppm over the time range, a graph with 800/1000/1400 ppm bands, and seconds since the last CO2 reading | Exporter 3.0+, and pico-temperature 3.0.0+ with an SCD4x |
+| [`grafana/environment.json`](grafana/environment.json) | Environment (`temperatured-environment`) | The overview, for every location:<br>• Counts of what needs attention: silent locations, stale measurements, rejected readings in the last hour, locations below 3 °C, locations within 3 °C of their dew point, and CO2 above 1000 ppm.<br>• A table with each location's latest temperature, humidity, margin above dew point, CO2 and last-seen time.<br>• Small temperature, humidity and CO2 trend graphs. | Exporter 2.0.0+. The dew point columns need the [recording rules](#dew-point-and-absolute-humidity); CO2 needs exporter 3.0.0+ |
+| [`grafana/temperature.json`](grafana/temperature.json) | Temperature (`temperatured-temperature`) | Temperature now (blue below 3 °C, frost risk), a graph with min/mean/max/last in the legend, rate of change in °C per hour, seconds since the last temperature reading, and rejected readings | Exporter 2.0.0+ |
+| [`grafana/humidity.json`](grafana/humidity.json) | Humidity (`temperatured-humidity`) | Relative humidity, absolute humidity, dew point, and margin above dew point (condensation risk) | Exporter 2.0.0+. Everything except relative humidity also needs the [recording rules](#dew-point-and-absolute-humidity) |
+| [`grafana/co2.json`](grafana/co2.json) | CO2 (`temperatured-co2`) | CO2 now, peak and time above 1000 ppm over the time range, a graph with 800/1000/1400 ppm bands, and seconds since the last CO2 reading | Exporter 3.0.0+, and pico-temperature 3.0.0+ with an SCD4x |
 
 To import one:
 1. In Grafana, go to **Dashboards → New → Import**.

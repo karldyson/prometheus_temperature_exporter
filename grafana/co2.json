@@ -16,7 +16,7 @@
   ],
   "uid": "temperatured-co2",
   "title": "CO2",
-  "description": "CO2 concentration from prometheus_temperatured (SCD4x sensors, pico-temperature 3.0.0 or later, exporter 3.0 or later). Bands: under 800 ppm good, 800-1000 fair, 1000-1400 ventilate, over 1400 poor. Outdoor air is about 420 ppm.",
+  "description": "CO2 concentration from prometheus_temperatured (SCD4x sensors, pico-temperature 3.0.0 or later, exporter 3.0.0 or later). Bands: under 800 ppm good, 800-1000 fair, 1000-1400 ventilate, over 1400 poor. Outdoor air is about 420 ppm.",
   "tags": ["temperature", "co2"],
   "editable": true,
   "graphTooltip": 1,
